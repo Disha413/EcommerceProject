@@ -3,30 +3,33 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      java: corretto17 # or corretto11, openjdk8, etc.
+      java: java8  # or 11, depending on your version
     commands:
-      - echo "Installing Maven..."
-      - yum install -y maven
+      - echo "Installing dependencies (if any)..."
+      # If you need to install any other software, do it here
 
   pre_build:
     commands:
-      - echo "Cleaning workspace..."
-      - mvn clean
+      - echo "Cleaning previous builds..."
+      - rm -rf build/ dist/
+      - mkdir -p build/classes
+      - mkdir -p dist
 
   build:
     commands:
-      - echo "Building Java application..."
-      - mvn package -DskipTests
+      - echo "Compiling Java files..."
+      - javac -d build/classes $(find src -name "*.java")
+      - echo "Copying web content (if applicable)..."
+      - cp -r webapp/* build/classes/
+      - echo "Creating WAR file..."
+      - cd build/classes
+      - jar -cvf ../../dist/EcommerceApp.war *
+      - cd ../../
 
   post_build:
     commands:
-      - echo "Build completed. Preparing artifacts..."
-      - mkdir -p build_output
-      - cp target/*.jar build_output/ # For Spring Boot JARs
-      # OR, for WAR-based web apps: cp target/*.war build_output/
-      - cp appspec.yml build_output/
-      - cp -r scripts/ build_output/scripts/ # Optional deployment scripts
+      - echo "Build completed. WAR file is in dist/EcommerceApp.war"
 
 artifacts:
   files:
-    - build_output/**/*
+    - dist/EcommerceApp.war
